@@ -31,3 +31,43 @@ document.querySelectorAll(".dialog-close").forEach(b=>b.onclick=()=>b.closest("d
 $("#newsletter-form").onsubmit=e=>{e.preventDefault();$("#newsletter-message").textContent="ممنون! ایمیلت ثبت شد. (اتصال سرویس خبرنامه در نسخه عملیاتی انجام می‌شود.)";e.target.reset()};
 $(".checkout-btn").onclick=()=>toast("برای پرداخت آنلاین، درگاه پرداخت و اطلاعات فروشگاه باید متصل شوند.");
 renderProducts();renderCart();
+
+// Gentle pointer-driven 3D tilt for desktop; disabled for touch and reduced-motion users.
+(()=> {
+  const finePointer=window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!finePointer||reduced)return;
+  const tilt=(el,e,max=5)=>{
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width;
+    const y=(e.clientY-r.top)/r.height;
+    const ry=(x-.5)*max*2;
+    const rx=(.5-y)*max*2;
+    el.style.transform=`perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+  };
+  document.addEventListener("pointermove",e=>{
+    const card=e.target.closest(".product-card,.collection-card");
+    if(card)tilt(card,e,card.classList.contains("collection-card")?3.5:4);
+  },{passive:true});
+  document.addEventListener("pointerout",e=>{
+    const card=e.target.closest(".product-card,.collection-card");
+    if(card&&!card.contains(e.relatedTarget))card.style.transform="";
+  },{passive:true});
+  const hero=$(".hero");
+  if(hero){
+    hero.addEventListener("pointermove",e=>{
+      const r=hero.getBoundingClientRect();
+      const dx=(e.clientX-r.left)/r.width-.5;
+      const dy=(e.clientY-r.top)/r.height-.5;
+      const image=$(".hero-image");
+      const content=$(".hero-content");
+      if(image)image.style.transform=`scale(1.08) translate3d(${-dx*12}px,${-dy*9}px,0)`;
+      if(content)content.style.transform=`translate3d(${dx*8}px,${dy*6}px,45px)`;
+    },{passive:true});
+    hero.addEventListener("pointerleave",()=>{
+      const image=$(".hero-image"),content=$(".hero-content");
+      if(image)image.style.transform="";
+      if(content)content.style.transform="";
+    });
+  }
+})();
